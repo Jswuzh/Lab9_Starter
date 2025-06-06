@@ -5,7 +5,14 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lab 9</title>
+  <title>Lab 9 - Error Handling</title>
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
+  <script>
+    window.TrackJS && TrackJS.install({
+      token: "your_trackjs_token_here",
+      application: "error-demo-app"
+    });
+  </script>
 
   <style>
     button {
@@ -46,6 +53,13 @@
       padding: 8px 2px;
       width: 122px;
     }
+
+    #custom-error-form {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
   </style>
 </head>
 
@@ -85,6 +99,22 @@
       <button>Console Trace</button>
       <button>Trigger a Global Error</button>
     </section>
+
+    <section id="try-catch-demo">
+      <h3>Try/Catch Demo</h3>
+      <button id="try-catch-btn">Test Try/Catch</button>
+      <div id="try-catch-result"></div>
+    </section>
+
+    <section id="custom-error-demo">
+      <h3>Custom Error Demo</h3>
+      <form id="custom-error-form">
+        <label for="age-input">Enter your age:</label>
+        <input type="number" id="age-input" min="0" max="120">
+        <button type="button" id="validate-age-btn">Validate Age</button>
+        <div id="custom-error-output"></div>
+      </form>
+    </section>
   </main>
 
   <script>
@@ -95,14 +125,194 @@
       let firstNum = document.querySelector('#first-num').value;
       let secondNum = document.querySelector('#second-num').value;
       let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+      
+      try {
+        if (isNaN(firstNum) || isNaN(secondNum)) {
+          throw new Error('Please enter valid numbers');
+        }
+        if (operator === '/' && secondNum === '0') {
+          throw new Error('Division by zero is not allowed');
+        }
+        output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+      } catch (error) {
+        output.innerHTML = error.message;
+        console.error('Calculator error:', error);
+      }
     });
 
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
 
-    // Start your code here
-    // You may move this JS to another file if you wish
+    errorBtns[0].addEventListener('click', () => {
+      console.log('This is a console.log message with some data:', {
+        date: new Date(),
+        userAgent: navigator.userAgent,
+        pageTitle: document.title
+      });
+    });
+
+    errorBtns[1].addEventListener('click', () => {
+      console.error('This is a console.error message showing an error condition', {
+        errorCode: 404,
+        description: 'Resource not found'
+      });
+    });
+
+    errorBtns[2].addEventListener('click', () => {
+      console.count('Button click count');
+    });
+
+    errorBtns[3].addEventListener('click', () => {
+      console.warn('This is a console.warn message about a potential issue', {
+        issue: 'Deprecated API',
+        suggestion: 'Use new API instead'
+      });
+    });
+
+    errorBtns[4].addEventListener('click', () => {
+      const x = 5, y = 10;
+      console.assert(x > y, `Assertion failed: ${x} is not greater than ${y}`);
+    });
+
+    errorBtns[5].addEventListener('click', () => {
+      console.clear();
+    });
+
+    errorBtns[6].addEventListener('click', () => {
+      console.dir(document.querySelector('form'));
+    });
+
+    errorBtns[7].addEventListener('click', () => {
+      console.dirxml(document.querySelector('form'));
+    });
+
+    errorBtns[8].addEventListener('click', () => {
+      console.group('User Details Group');
+      console.log('Name: John Doe');
+      console.log('Age: 30');
+      console.log('Email: john@example.com');
+    });
+
+    errorBtns[9].addEventListener('click', () => {
+      console.groupEnd();
+    });
+
+    errorBtns[10].addEventListener('click', () => {
+      console.table([
+        { id: 1, name: 'Alice', department: 'Marketing' },
+        { id: 2, name: 'Bob', department: 'Engineering' },
+        { id: 3, name: 'Charlie', department: 'Sales' }
+      ]);
+    });
+
+    let timer;
+    errorBtns[11].addEventListener('click', () => {
+      timer = true;
+      console.time('Data Processing Timer');
+    });
+
+    errorBtns[12].addEventListener('click', () => {
+      if (timer) {
+        console.timeEnd('Data Processing Timer');
+        timer = false;
+      } else {
+        console.warn('Timer was not started');
+      }
+    });
+
+    errorBtns[13].addEventListener('click', () => {
+      function outerFunction() {
+        function innerFunction() {
+          console.trace('Trace from inner function');
+        }
+        innerFunction();
+      }
+      outerFunction();
+    });
+    
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.log('Global error caught:', { message, source, lineno, colno, error });
+      // In a real app, you would send this to your error tracking service
+      return true; // Prevent default error handling
+    };
+
+    errorBtns[14].addEventListener('click', () => {
+      // This will trigger the global error handler
+      const nullObj = null;
+      try {
+        nullObj.nonExistentMethod();
+      } catch (e) {
+        console.error('Caught error:', e);
+        // Re-throw to demonstrate global error handling
+        throw e;
+      }
+    });
+
+    document.getElementById('try-catch-btn').addEventListener('click', () => {
+      const resultDiv = document.getElementById('try-catch-result');
+      resultDiv.innerHTML = '';
+      
+      try {
+        // Try to access a commented out DOM element
+        const hiddenElement = document.getElementById('commented-out-element');
+        if (!hiddenElement) {
+          throw new Error('Element not found - it might be commented out in the HTML');
+        }
+        resultDiv.textContent = 'Element found: ' + hiddenElement.id;
+      } catch (error) {
+        resultDiv.textContent = 'Error caught: ' + error.message;
+        console.error('Try/catch error:', error);
+      } finally {
+        resultDiv.textContent += ' (finally block executed)';
+      }
+    });
+
+    class InvalidAgeError extends Error {
+      constructor(age, message = 'Invalid age') {
+        super(message);
+        this.age = age;
+        this.name = 'InvalidAgeError';
+      }
+      
+      toString() {
+        return `${this.name}: ${this.message} (age: ${this.age})`;
+      }
+    }
+
+    document.getElementById('validate-age-btn').addEventListener('click', () => {
+      const ageInput = document.getElementById('age-input');
+      const outputDiv = document.getElementById('custom-error-output');
+      outputDiv.innerHTML = '';
+      
+      try {
+        const age = parseInt(ageInput.value);
+        
+        if (isNaN(age)) {
+          throw new InvalidAgeError(ageInput.value, 'Age must be a number');
+        }
+        if (age < 0) {
+          throw new InvalidAgeError(age, 'Age cannot be negative');
+        }
+        if (age > 120) {
+          throw new InvalidAgeError(age, 'Age seems unrealistic');
+        }
+        
+        outputDiv.textContent = `Valid age: ${age}`;
+        outputDiv.style.color = 'green';
+      } catch (error) {
+        if (error instanceof InvalidAgeError) {
+          outputDiv.textContent = error.toString();
+          console.error('Custom error caught:', error);
+        } else {
+          outputDiv.textContent = 'An unexpected error occurred: ' + error.message;
+          console.error('Unexpected error:', error);
+        }
+        outputDiv.style.color = 'red';
+      }
+    });
   </script>
+  
+  <!-- This element is commented out for the try/catch demo -->
+  <!-- <div id="commented-out-element">This element is commented out</div> -->
 </body>
 
 </html>
